@@ -16,7 +16,7 @@ class RoomController extends Controller
      */
     public function index()
     {
-        $rooms = Room::all('img','room_number','type','description','is_available');
+        $rooms = Room::all('id','img','room_number','type','description','is_available');
         if($rooms){
             $result = [
                 'success' => true,
@@ -57,12 +57,7 @@ class RoomController extends Controller
         // إذا نجح التحقق، يتم معالجة البيانات
         if($data = $valid->validated()){
         // تحميل الصورة إذا تم تقديمها
-        if ($image = $request->file('img')) {
-            $destinationPath = 'images/Rooms';
-            $roomImage = 'room' . date('YmdHis') . "." . $image->getClientOriginalExtension();
-            $image->move(public_path($destinationPath), $roomImage);
-            $data['img'] = $roomImage; // تأكد من أن اسم الحقل يتطابق مع اسم العمود في قاعدة البيانات
-        }
+      $data=$this->SaveImage($request,$data,"Rooms");
 }
         // إنشاء الغرفة
         Room::create($data);
@@ -84,6 +79,46 @@ class RoomController extends Controller
     public function update(Request $request, string $id)
     {
 
+        // التحقق من صحة البيانات
+        $request->validate(['room_number' => 'required',
+            'description' => 'required|string',
+            'is_available' => 'required|boolean',
+            'type' => 'required|string',
+            'img' => 'mimes:jpeg,png,jpg,svg|max:2048']);
+
+
+        // البحث عن الغرفة
+        $room = Room::find($id);
+        if (!$room) {
+            return $this->returnError(404, 'room not found');
+        }
+
+        // تحديث الصورة إذا كانت موجودة
+        if ($request->hasFile('img')) {
+            $room = $this->SaveImage($request, $room, "Rooms");
+        }
+
+        // تحديث الحقول الأخرى
+        if ($request->has('room_number')) {
+            $room->room_number = $request->room_number;
+        }
+
+        if ($request->has('description')) {
+            $room->description = $request->description;
+        }
+
+        if ($request->has('is_available')) {
+            $room->is_available = $request->is_available;
+        }
+
+        if ($request->has('type')) {
+            $room->type = $request->type;
+        }
+
+        // حفظ التغييرات
+        $room->update();
+
+        return $this->returnSuccess(200, 'Room updated successfully.');
     }
 
     /**
@@ -91,9 +126,15 @@ class RoomController extends Controller
      */
     public function destroy(string $id)
     {
-        $room = Room::findOrFail($id);
+        $room = Room::find($id);
+
+        if($room){
         $room->delete();
-        return response()->json(null, 204);
+        return response()->json("Room deleted Successfully", 204);
+        }
+        else{
+            return response()->json("Room is not found", 404);
+        }
 
     }
 }

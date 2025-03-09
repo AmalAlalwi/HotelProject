@@ -15,9 +15,15 @@ use App\Http\Controllers\Api\AuthController;
 |
 */
 //-----------------------------api auth-----------------------------------------------------------
+
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
-    Route::post('logout', [AuthController::class, 'logout']);
+    Route::middleware('auth_jwt')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+    });
 
 //------------------------------CRUD Rooms--------------------------------------------------------
-Route::apiResource('rooms', RoomController::class);
+Route::middleware(['auth_jwt','admin'])->group(function () {
+    Route::apiResource('rooms', RoomController::class);
+});
