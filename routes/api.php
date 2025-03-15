@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\RoomController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -24,6 +25,11 @@ use App\Http\Controllers\Api\AuthController;
     });
 
 //------------------------------CRUD Rooms--------------------------------------------------------
+Route::get('/rooms', [RoomController::class, 'index']);
 Route::middleware(['auth_jwt','admin'])->group(function () {
-    Route::apiResource('rooms', RoomController::class);
+    Route::post('/rooms', [RoomController::class, 'store']);
+    Route::put('/rooms/{room}', [RoomController::class, 'update']);
+    Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
+    Route::get('/rooms/{room}', [RoomController::class, 'show']);
 });
+

@@ -22,7 +22,7 @@ public function returnData($key,$value,$msg="")
         'status' => true,
         'errNum' => 200,
         'msg' => $msg,
-        'key' => $value,
+        $key => $value,
     ]);
 }
     public function returnValidationError($code="E001", $validator)
@@ -44,7 +44,7 @@ public function returnData($key,$value,$msg="")
             return 'E0011';
 
         else if ($input == "password")
-            return 'E002';
+            return '401';
 
         else if ($input == "mobile")
             return 'E003';
@@ -59,7 +59,7 @@ public function returnData($key,$value,$msg="")
             return 'E006';
 
         else if ($input == "email")
-            return 'E007';
+            return '422';
 
         else if ($input == "city_id")
             return 'E008';

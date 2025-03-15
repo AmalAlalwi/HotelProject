@@ -14,27 +14,40 @@ class RoomController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $rooms = Room::all('id','img','room_number','type','description','is_available');
-        if($rooms){
-            $result = [
-                'success' => true,
-                'data' => $rooms,
-                'message' => 'rooms retrieved successfully.'
-            ];
-        }
-        else{
-            $result = [
-                'success' => false,
-                'message' => 'rooms not found.'
+        $request->validate([
+            'minPrice' => 'nullable|numeric',
+            'maxPrice' => 'nullable|numeric',
+            'perPage' => 'nullable|integer|min:1|max:50',
+            'filter' => 'nullable|numeric|min:1|max:2',
+        ]);
+        $perPage = $request->query('perPage', 10);
+        $price = $request->query('price');
+        $filter = $request->query('filter');
+        $query = Room::query();
+        if($perPage){
+            if($filter){
+                if($filter =="1"){
+                    $query->where('type', 'single');
+                }
+                else if($filter =="2"){
+                    $query->where('type', 'double');
+                }
+            }
 
-            ];
+            if ($price !== null) {
+                $query->where('price', '<=', $price);
+            }
+            $rooms = $query->paginate($perPage);
+            if($rooms){
+                return $this->returnData('rooms',$rooms,"Rooms retrieved successfully");
+            }
+            else{
+                return $this->returnError('404','Rooms not found');
+            }
         }
-        return response()->json($result);
-
     }
-
     /**
      * Store a newly created resource in storage.
      */
@@ -46,7 +59,8 @@ class RoomController extends Controller
             'description' => 'required|string',
             'is_available' => 'required|boolean|in:0,1',
             'type' => 'required|string',
-            'img' => 'nullable|mimes:jpeg,png,jpg,svg|max:2048'
+            'img' => 'nullable|mimes:jpeg,png,jpg,svg|max:2048',
+            'price' => 'required|numeric'
         ]);
 
         // إذا فشل التحقق، يتم إرجاع الأخطاء تلقائيًا
@@ -71,8 +85,15 @@ class RoomController extends Controller
     public function show(string $id)
     {
 
-    }
+        $room = Room::find($id);
+        if(!$room){
+            return $this->returnError('404','Room not found');
+        }
+        else{
+            return $this->returnData('room',$room,"success");
+        }
 
+    }
     /**
      * Update the specified resource in storage.
      */
@@ -84,9 +105,9 @@ class RoomController extends Controller
             'description' => 'required|string',
             'is_available' => 'required|boolean',
             'type' => 'required|string',
-            'img' => 'mimes:jpeg,png,jpg,svg|max:2048']);
-
-
+            'img' => 'mimes:jpeg,png,jpg,svg|max:2048',
+            'price'=>'required|numeric'
+        ]);
         // البحث عن الغرفة
         $room = Room::find($id);
         if (!$room) {
@@ -114,6 +135,9 @@ class RoomController extends Controller
         if ($request->has('type')) {
             $room->type = $request->type;
         }
+        if ($request->has('price')) {
+            $room->price = $request->price;
+        }
 
         // حفظ التغييرات
         $room->update();
@@ -127,13 +151,15 @@ class RoomController extends Controller
     public function destroy(string $id)
     {
         $room = Room::find($id);
-
-        if($room){
-        $room->delete();
-        return response()->json("Room deleted Successfully", 204);
+        if(!$room){
+            return $this->returnError('404','Room not found');
+        }
+        else if($room&&$room->is_available==0){
+            return $this->returnError('404','Room is booking ,you can not delete this room');
         }
         else{
-            return response()->json("Room is not found", 404);
+        $room->delete();
+        return response()->json("Room deleted Successfully", 204);
         }
 
     }
