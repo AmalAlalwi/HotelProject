@@ -65,7 +65,7 @@ class RoomController extends Controller
 
         // إذا فشل التحقق، يتم إرجاع الأخطاء تلقائيًا
         if ($valid->fails()) {
-            return response()->json($valid->errors(), 422);
+            return response(['errors'=>$valid->errors()],422);
         }
 
         // إذا نجح التحقق، يتم معالجة البيانات
@@ -101,13 +101,17 @@ class RoomController extends Controller
     {
 
         // التحقق من صحة البيانات
-        $request->validate(['room_number' => 'required',
+        $valid = Validator::make($request->all(), [
+            'room_number' => 'required',
             'description' => 'required|string',
             'is_available' => 'required|boolean',
             'type' => 'required|string',
             'img' => 'mimes:jpeg,png,jpg,svg|max:2048',
             'price'=>'required|numeric'
         ]);
+        if ($valid->fails()) {
+            return response(['errors'=>$valid->errors()],422);
+        }
         // البحث عن الغرفة
         $room = Room::find($id);
         if (!$room) {

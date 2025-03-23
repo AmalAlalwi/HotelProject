@@ -12,6 +12,18 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        $schedule->call(function () {
+            $now = now();
+            $bookings = \App\Models\Booking::where('check_out_date', '<=', $now)->get();
+
+            foreach ($bookings as $booking) {
+
+                $room = $booking->room;
+                $room->is_available = 1;
+                $room->save();
+             //   $booking->delete(); // احذف الحجز إذا كنت لا تحتاجه
+            }
+        })->everyMinute();
         // $schedule->command('inspire')->hourly();
     }
 
