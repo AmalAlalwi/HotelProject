@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('check_in_date');
             $table->date('check_out_date');
             $table->decimal('total_price', 8, 2);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

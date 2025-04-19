@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\RoomController;
 
+use App\Http\Controllers\Api\Admin\ServiceController;
 use App\Http\Controllers\Api\User\BookingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -29,11 +30,14 @@ use App\Http\Controllers\Api\User\MessageController;
 //------------------------------CRUD Rooms--------------------------------------------------------
 
 Route::middleware(['auth_jwt','admin'])->group(function () {
+//-------------------------------Rooms api-------------------------------------------
     Route::get('/rooms', [RoomController::class, 'index']);
     Route::post('/rooms', [RoomController::class, 'store']);
     Route::put('/rooms/{room}', [RoomController::class, 'update']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
     Route::get('/rooms/{room}', [RoomController::class, 'show']);
+//-------------------------------Service api----------------------------------------
+    Route::apiResource('/services', ServiceController::class);
 });
 
 Route::middleware(['auth_jwt'])->group(function () {

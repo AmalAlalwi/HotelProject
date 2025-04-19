@@ -211,15 +211,15 @@ public function returnData($key,$value,$msg="")
         else
             return "";
     }
-Public function SaveImage($request,$data,$folder)
-{        // تحميل الصورة إذا تم تقديمها
+
+    Public function SaveImage($request, $folder)
+    {
 
         if ($image = $request->file('img')) {
             $destinationPath = 'images/'.$folder;
-            $Image =  date('YmdHis') . "." . $image->getClientOriginalExtension();
+            $Image =$folder.date('YmdHis') . "." . $image->getClientOriginalExtension();
             $image->move(public_path($destinationPath), $Image);
-            $data['img'] = $Image; // تأكد من أن اسم الحقل يتطابق مع اسم العمود في قاعدة البيانات
+            return $Image;
         }
-        return $data;
-}
+    }
 }
