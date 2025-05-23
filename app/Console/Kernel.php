@@ -17,12 +17,18 @@ class Kernel extends ConsoleKernel
             $bookings = \App\Models\Booking::where('check_out_date', '<=', $now)->get();
 
             foreach ($bookings as $booking) {
-
                 $room = $booking->room;
                 $room->is_available = 1;
                 $room->save();
-             //   $booking->delete(); // احذف الحجز إذا كنت لا تحتاجه
             }
+            $bookingsService = \App\Models\BookingService::where('check_out_date', '<=', $now)->get();
+
+            foreach ($bookingsService as $booking) {
+                $service = $booking->BookingsService;
+                $service->is_available = 1;
+                $service->save();
+            }
+
         })->everyMinute();
         // $schedule->command('inspire')->hourly();
     }

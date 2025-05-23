@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\RoomController;
 
 use App\Http\Controllers\Api\Admin\ServiceController;
 use App\Http\Controllers\Api\User\BookingController;
+use App\Http\Controllers\Api\User\BookingServiceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -42,7 +43,9 @@ Route::middleware(['auth_jwt','admin'])->group(function () {
 
 Route::middleware(['auth_jwt'])->group(function () {
     Route::apiResource('booking', BookingController::class);
+    Route::apiResource('bookingService', BookingServiceController::class);
     Route::get('/getrooms', [\App\Http\Controllers\Api\User\RoomController::class, 'index']);
+    Route::get('/getservices', [\App\Http\Controllers\Api\User\RoomController::class, 'indexService']);
     Route::post('/sendMessage', [MessageController::class, 'sendMessage']);
     Route::get('/conversation/{receiverId}', [MessageController::class, 'getConversation']);
 });

@@ -13,27 +13,34 @@ class RoomRepository implements RoomRepositoryInterface{
         $perPage = $request->query('perPage', 10);
         $price = $request->query('price');
         $filter = $request->query('filter');
-        $query = Room::query();
-        if($perPage){
-            if($filter){
-                if($filter =="1"){
-                    $query->where('type', 'single');
-                }
-                else if($filter =="2"){
-                    $query->where('type', 'double');
-                }
-            }
 
-            if ($price !== null) {
-                $query->where('price', '<=', $price);
-            }
-            $rooms = $query->paginate($perPage);
-            if($rooms->isNotEmpty()){
-                return $this->returnData('rooms',$rooms,"Rooms retrieved successfully");
-            }
-            else{
-                return $this->returnError('404','Rooms not found');
-            }
+        $query = Room::query();
+
+
+        if ($filter === "1") {
+            $query->where('type', 'single');
+        } elseif ($filter === "2") {
+            $query->where('type', 'double');
+        }
+
+
+        if ($price !== null) {
+            $query->where('price', '<=', $price);
+        }
+
+
+        $rooms = $query->paginate($perPage);
+
+
+        $rooms->getCollection()->transform(function ($room) {
+            $room->img = asset($room->img);
+            return $room;
+        });
+
+        if ($rooms->isNotEmpty()) {
+            return $this->returnData('rooms', $rooms, "Rooms retrieved successfully");
+        } else {
+            return $this->returnError('404', 'Rooms not found');
         }
     }
     public function store($request)
@@ -50,7 +57,8 @@ class RoomRepository implements RoomRepositoryInterface{
 
     }
     public function show($id){
-        $room =Room::findorfail($id);
+        $room =Room::find($id);
+        $room->img = asset($room->img);
         if($room){
             return $this ->returnData('Room',$room,"Room retrieved successfully");
 

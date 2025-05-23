@@ -10,27 +10,34 @@ class ServiceRepository implements ServiceRepositoryInterface{
     use GeneralTrait;
     public function index($request)
     {
-    $perPage = $request->query('perPage', 10);
-    $price = $request->query('price');
-    $name = $request->query('name');
-    $query = Service::query();
-    if($perPage){
-        if($name){
-           $query->where('name', 'like', "%$name%");
+        $perPage = $request->query('perPage', 10);
+        $price = $request->query('price');
+        $name = $request->query('name');
+
+        $query = Service::query();
+
+
+        if (!empty($name)) {
+            $query->where('name', 'like', '%' . $name . '%');
         }
 
-        if ($price !== null) {
+
+        if (!is_null($price)) {
             $query->where('price', '<=', $price);
         }
-        $service = $query->paginate($perPage);
 
-        if($service->isNotEmpty()){
-            return $this->returnData('services',$service,"Services retrieved successfully");
+
+        $services = $query->paginate($perPage);
+        $services->getCollection()->transform(function ($service) {
+            $service->img = asset($service->img);
+            return $service;
+        });
+
+        if ($services->isNotEmpty()) {
+            return $this->returnData('services', $services, "Services retrieved successfully");
+        } else {
+            return $this->returnError('404', 'Services not found');
         }
-        else{
-            return $this->returnError('404','Services not found');
-        }
-    }
     }
     public function store($request)
 {
@@ -44,7 +51,8 @@ class ServiceRepository implements ServiceRepositoryInterface{
     return $this->returnData('service',$service,"Service saved successfully");
 }
     public function show($id){
-        $Service =Service::findorfail($id);
+        $Service =Service::find($id);
+        $Service->img = asset($Service->img);
         if($Service){
             return $this ->returnData('Service',$Service,"Service retrieved successfully");
 
