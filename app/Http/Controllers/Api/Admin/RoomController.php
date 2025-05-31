@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Repository\Rooms\RoomRepository;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
-use App\Models\Room;
 use Illuminate\Support\Facades\Validator;
 
 class RoomController extends Controller

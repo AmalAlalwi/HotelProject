@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Interfaces\User\Services\ServiceRepositoryInterface;
 use Illuminate\Http\Request;
-use App\Interfaces\Services\ServiceRepositoryInterface;
 use Illuminate\Support\Facades\Validator;
 
 class ServiceController extends Controller

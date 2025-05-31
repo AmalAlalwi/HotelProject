@@ -1,9 +1,8 @@
 <?php
 namespace App\Repository\Services;
-use App\Interfaces\Services\ServiceRepositoryInterface;
+use App\Interfaces\User\Services\ServiceRepositoryInterface;
 use App\Models\Service;
 use App\Traits\GeneralTrait;
-use Illuminate\Support\Facades\Validator;
 
 
 class ServiceRepository implements ServiceRepositoryInterface{
@@ -29,7 +28,7 @@ class ServiceRepository implements ServiceRepositoryInterface{
 
         $services = $query->paginate($perPage);
         $services->getCollection()->transform(function ($service) {
-            $service->img = asset($service->img);
+            $service->img =asset('images/Service/'.$service->img);
             return $service;
         });
 
@@ -52,7 +51,7 @@ class ServiceRepository implements ServiceRepositoryInterface{
 }
     public function show($id){
         $Service =Service::find($id);
-        $Service->img = asset($Service->img);
+        $Service->img = asset('images/Service/'.$Service->img);
         if($Service){
             return $this ->returnData('Service',$Service,"Service retrieved successfully");
 

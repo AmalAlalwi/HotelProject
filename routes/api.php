@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Admin\RoomController;
 use App\Http\Controllers\Api\Admin\ServiceController;
 use App\Http\Controllers\Api\User\BookingController;
 use App\Http\Controllers\Api\User\BookingServiceController;
+use App\Http\Controllers\Api\User\InvoiceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -48,4 +49,11 @@ Route::middleware(['auth_jwt'])->group(function () {
     Route::get('/getservices', [\App\Http\Controllers\Api\User\RoomController::class, 'indexService']);
     Route::post('/sendMessage', [MessageController::class, 'sendMessage']);
     Route::get('/conversation/{receiverId}', [MessageController::class, 'getConversation']);
+    //----------------------------------Invoices----------------------------------------------
+    Route::get('/invoices/paid', [InvoiceController::class, 'getPaidInvoices']);
+    Route::get('/invoices/unpaid', [InvoiceController::class, 'getUnpaidInvoices']);
+    Route::get('/invoices/partial', [InvoiceController::class, 'getPartialInvoices']);
+    Route::get('/invoices/{id}/show', [InvoiceController::class, 'showInvoice']);
+    Route::get('/invoices/{id}/pdf', [InvoiceController::class, 'downloadPDF']);
+    Route::post('/invoices/{id}/simulate', [InvoiceController::class, 'simulatePayment']);
 });

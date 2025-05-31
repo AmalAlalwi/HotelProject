@@ -6,15 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
+use App\Services\InvoiceService;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class BookingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+   public $invoiceService;
+    public function __construct(InvoiceService $invoiceService)
+    {
+        $this->invoiceService = $invoiceService;
+    }
     use GeneralTrait;
     public function index(Request $request)
     {
@@ -40,18 +45,20 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
             'room_id' => 'required|exists:rooms,id',
-            'check_in_date' => 'required|date',
+            'check_in_date' => 'required|date|after_or_equal:today',
             'check_out_date' => 'required|date|after:check_in_date',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
-
+        DB::beginTransaction();
+        try{
         $room = Room::find($request->room_id);
 
         if (!$room->is_available) {
@@ -69,8 +76,22 @@ class BookingController extends Controller
         ]);
 
         $room->update(['is_available' => false]);
-
+        $days = Carbon::parse($request->check_in_date)->diffInDays($request->check_out_date);
+        $this->invoiceService->addItemOrCreateInvoice(
+            $user->id,
+            'room',
+            $room->id,
+            "Room from {$request->check_in_date} to {$request->check_out_date}",
+            $days,
+            $room->price
+        );
+        DB::commit();
         return response()->json($booking, 201);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**

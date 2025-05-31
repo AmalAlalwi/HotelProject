@@ -1,9 +1,8 @@
 <?php
 namespace App\Repository\Rooms;
-use App\Interfaces\Rooms\RoomRepositoryInterface;
+use App\Interfaces\User\Rooms\RoomRepositoryInterface;
 use App\Models\Room;
 use App\Traits\GeneralTrait;
-use Illuminate\Support\Facades\Validator;
 
 
 class RoomRepository implements RoomRepositoryInterface{
@@ -33,7 +32,7 @@ class RoomRepository implements RoomRepositoryInterface{
 
 
         $rooms->getCollection()->transform(function ($room) {
-            $room->img = asset($room->img);
+            $room->img = asset('images/Rooms/'.$room->img);
             return $room;
         });
 
@@ -58,7 +57,7 @@ class RoomRepository implements RoomRepositoryInterface{
     }
     public function show($id){
         $room =Room::find($id);
-        $room->img = asset($room->img);
+        $room->img =asset('images/Rooms/'.$room->img);
         if($room){
             return $this ->returnData('Room',$room,"Room retrieved successfully");
 

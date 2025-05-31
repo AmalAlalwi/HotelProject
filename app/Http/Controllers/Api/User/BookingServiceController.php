@@ -7,13 +7,20 @@ use App\Models\Booking;
 use App\Models\BookingService;
 use App\Models\Room;
 use App\Models\Service;
+use App\Services\InvoiceService;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 
 class BookingServiceController extends Controller
 {
     use GeneralTrait;
+    public $invoiceService;
+    public function __construct(InvoiceService $invoiceService)
+    {
+        $this->invoiceService = $invoiceService;
+    }
     public function index(Request $request)
     {
         $valid = Validator::make($request->all(), [
@@ -42,7 +49,7 @@ class BookingServiceController extends Controller
 
         $validator = Validator::make($request->all(), [
             'service_id' => 'required|exists:services,id',
-            'check_in_date' => 'required|date',
+            'check_in_date' => 'required|date|after_or_equal:today',
             'check_out_date' => 'required|date|after:check_in_date',
         ]);
 
@@ -69,7 +76,15 @@ class BookingServiceController extends Controller
         ]);
 
         $service->update(['is_available' => false]);
-
+        $days = Carbon::parse($request->check_in_date)->diffInDays($request->check_out_date);
+        $this->invoiceService->addItemOrCreateInvoice(
+            $user->id,
+            'service',
+            $service->id,
+            "Service from {$request->check_in_date} to {$request->check_out_date}",
+            $days,
+            $service->price
+        );
         return response()->json($booking, 201);
     }
 

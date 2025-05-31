@@ -1,6 +1,6 @@
 <?php
-namespace App\Interfaces\Rooms;
-interface RoomRepositoryInterface
+namespace App\Interfaces\User\Services;
+interface ServiceRepositoryInterface
 {
     public function index($request);
     public function show($id);
