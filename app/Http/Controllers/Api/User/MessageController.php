@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\User;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\NewChatMessageNotification;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,7 @@ class MessageController extends Controller
             'receiver_id' => $receiver->id,
             'message' => $request->message,
         ]);
+        $receiver->notify(new NewChatMessageNotification($message->message, $sender));
         return $this->returnData('message',$message,"Message sent successfully");
        // return response()->json(['message' => 'تم إرسال الرسالة بنجاح', 'data' => $message], 201);
     }
@@ -48,5 +50,21 @@ class MessageController extends Controller
             $query->where('sender_id', $receiver->id)->where('receiver_id', $user->id);
         })->orderBy('created_at', 'asc')->get();
         return $this->returnData('messages',$messages,"Messages returned successfully");
+    }
+    public function getAllConversations($employeeId)
+    {
+        $user = Auth::user();
+        if ($user->id==$employeeId) {
+            $conversations = Message::where('sender_id', $employeeId)
+                ->orWhere('receiver_id', $employeeId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return $this->returnData('conversations', $conversations, 'All conversations for employee #3');
+        }
+        else{
+            return $this->returnError(401,'You do not have permission to access this page');
+        }
+
     }
 }
