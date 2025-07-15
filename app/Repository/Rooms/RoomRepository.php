@@ -32,7 +32,7 @@ class RoomRepository implements RoomRepositoryInterface{
 
 
         $rooms->getCollection()->transform(function ($room) {
-            $room->img = asset('images/Rooms/'.$room->img);
+            $room->img = asset('storage/'.$room->img);
             return $room;
         });
 
@@ -57,7 +57,7 @@ class RoomRepository implements RoomRepositoryInterface{
     }
     public function show($id){
         $room =Room::find($id);
-        $room->img =asset('images/Rooms/'.$room->img);
+        $room->img =asset('storage/'.$room->img);
         if($room){
             return $this ->returnData('Room',$room,"Room retrieved successfully");
 

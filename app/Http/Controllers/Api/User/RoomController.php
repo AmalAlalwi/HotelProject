@@ -44,7 +44,7 @@ class RoomController extends Controller
 
 
         $rooms->getCollection()->transform(function ($room) {
-            $room->img = asset('images/Rooms/'.$room->img);
+            $room->img = asset('storage/'.$room->img);
             return $room;
         });
 
@@ -83,7 +83,7 @@ class RoomController extends Controller
         $services = $query->paginate($perPage);
 
         $services->getCollection()->transform(function ($service) {
-            $service->img =asset('images/Service/'.$service->img);
+            $service->img =asset('storage/'.$service->img);
             return $service;
         });
         if ($services->isNotEmpty()) {

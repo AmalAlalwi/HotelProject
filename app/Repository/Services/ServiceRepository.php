@@ -28,7 +28,7 @@ class ServiceRepository implements ServiceRepositoryInterface{
 
         $services = $query->paginate($perPage);
         $services->getCollection()->transform(function ($service) {
-            $service->img =asset('images/Service/'.$service->img);
+            $service->img =asset('storage/'.$service->img);
             return $service;
         });
 
@@ -51,7 +51,7 @@ class ServiceRepository implements ServiceRepositoryInterface{
 }
     public function show($id){
         $Service =Service::find($id);
-        $Service->img = asset('images/Service/'.$Service->img);
+        $Service->img = asset('storage/'.$Service->img);
         if($Service){
             return $this ->returnData('Service',$Service,"Service retrieved successfully");
 
