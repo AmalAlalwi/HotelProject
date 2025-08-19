@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Booking;
-use App\Models\Room;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
+
 class UpdateRoomAvailability extends Command
 {
     /**
@@ -13,14 +13,14 @@ class UpdateRoomAvailability extends Command
      *
      * @var string
      */
-    protected $signature = 'rooms:is_available';
+    protected $signature = 'rooms:update-availability';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Update room availability based on booking dates';
+    protected $description = 'Updates room availability based on booking check-in dates.';
 
     /**
      * Execute the console command.
@@ -29,14 +29,20 @@ class UpdateRoomAvailability extends Command
     {
         $today = Carbon::today();
 
-        // الغرف التي انتهت فترة حجزها
-        $bookings = Booking::where('check_out_date', '<', $today)->get();
+        $bookings = Booking::where('check_in_date', '<=', $today)
+                            ->whereHas('room', function ($query) {
+                                $query->where('is_available', true);
+                            })
+                            ->get();
 
         foreach ($bookings as $booking) {
             $room = $booking->room;
-            $room->update(['is_available' => true]);
+            if ($room) {
+                $room->update(['is_available' => false]);
+                $this->info("Room {$room->id} marked as unavailable.");
+            }
         }
 
-        $this->info('Room availability updated successfully!');
+        $this->info('Room availability updated successfully.');
     }
 }

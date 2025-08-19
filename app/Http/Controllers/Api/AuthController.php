@@ -72,4 +72,16 @@ class AuthController extends Controller
 
 
     }
+    public function index()
+    {
+        try {
+            $users = User::whereNotIn('email', ['admin@gmail.com', 'employee@gmail.com'])
+                ->select('id', 'name', 'email') // اختياري: إرجاع حقول محددة فقط
+                ->get();
+
+            return $this->returnData('users', $users, 'Users retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->returnError(500, 'Failed to retrieve users');
+        }
+    }
 }

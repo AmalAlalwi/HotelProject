@@ -30,6 +30,9 @@ class Kernel extends ConsoleKernel
             }
 
         })->everyMinute();
+
+        $schedule->command('rooms:update-availability')->dailyAt('00:00');
+        $schedule->command('services:update-availability')->dailyAt('00:00');
         // $schedule->command('inspire')->hourly();
     }
 

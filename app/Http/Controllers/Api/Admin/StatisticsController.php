@@ -124,4 +124,36 @@ class StatisticsController extends Controller
             'monthly_revenue' => $monthlyRevenue,
         ]);
     }
+    public function getMonthlyBookings()
+    {
+        $bookings = DB::table('bookings')
+            ->select(
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('COUNT(*) as booking_count')
+            )
+            ->whereYear('created_at', now()->year)
+            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->pluck('booking_count', 'month');
+        if($bookings->count() > 0){
+            return response()->json(['bookings' => $bookings],201);
+        }
+        return response()->json("Not found bookings",404);
+    }
+    public function getMonthlyRevenues()
+    {
+        $revenues = DB::table('invoices')
+            ->select(
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('SUM(total_price) as revenue')
+            )
+            ->where('payment_status', 'paid')
+            ->whereYear('created_at', now()->year)
+            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->pluck('revenue', 'month');
+        if($revenues->count() > 0){
+            return response()->json(['revenues' => $revenues],201);
+        }
+        return response()->json("Not found revenues",404);
+    }
+
 }

@@ -7,10 +7,17 @@ use App\Models\Invoice;
 use App\Traits\GeneralTrait;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use App\Services\InvoiceService;
+use Illuminate\Support\Facades\Mail;
 
 class InvoiceRepository implements InvoiceInterface
 {
     use GeneralTrait;
+    protected $invoiceService;
+    public function __construct(InvoiceService $invoiceService)
+    {
+        $this->invoiceService = $invoiceService;
+    }
     public function getUnpaidInvoices($request){
         $user = auth()->user();
         $unpaidInvoices = Invoice::where('user_id', $user->id)
@@ -50,6 +57,7 @@ class InvoiceRepository implements InvoiceInterface
 
         if ($invoice->paid_amount >= $invoice->total_price) {
             $invoice->payment_status = 'paid';
+            $this->invoiceService->sendInvoiceEmail($invoice->id);
         } elseif ($invoice->paid_amount > 0) {
             $invoice->payment_status = 'partial';
         }

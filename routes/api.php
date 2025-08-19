@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\User\MessageController;
     Route::middleware('auth_jwt')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('users', [AuthController::class, 'index']);
     });
 
 //------------------------------CRUD Rooms--------------------------------------------------------
@@ -49,6 +50,8 @@ Route::middleware(['auth_jwt','admin'])->group(function () {
     Route::get('/admin/invoices/unpaid',[StatisticsController::class,'getUnpaidInvoicesWithItems']);
     Route::get('/admin/invoices/partial',[StatisticsController::class,'getPartialInvoicesWithItems']);
     Route::get('/admin/statistics/revenue',[StatisticsController::class,'revenueStatus']);
+    Route::get('/admin/monthly-bookings',[StatisticsController::class,'getMonthlyBookings']);
+    Route::get('/admin/monthly-revenues',[StatisticsController::class,'getMonthlyRevenues']);
 });
 
 Route::middleware(['auth_jwt'])->group(function () {

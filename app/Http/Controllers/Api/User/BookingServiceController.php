@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers\Api\User;
@@ -61,8 +62,46 @@ class BookingServiceController extends Controller
         if(!$service){
             return $this->returnError('400', 'Service is not found');
         }
-        if (!$service->is_available) {
-            return $this->returnError('400', 'Service is not available');
+        // Remove this general availability check as we will do a detailed date range check
+        // if (!$service->is_available) {
+        //     return $this->returnError('400', 'Service is not available');
+        // }
+
+        $newCheckIn = Carbon::parse($request->check_in_date);
+        $newCheckOut = Carbon::parse($request->check_out_date);
+
+        $overlappingBooking = BookingService::where('service_id', $request->service_id)
+            ->where(function ($query) use ($newCheckIn, $newCheckOut) {
+                $query->whereBetween('check_in_date', [$newCheckIn, $newCheckOut->subDay()])
+                    ->orWhereBetween('check_out_date', [$newCheckIn->addDay(), $newCheckOut])
+                    ->orWhere(function ($query) use ($newCheckIn, $newCheckOut) {
+                        $query->where('check_in_date', '<=', $newCheckIn)
+                            ->where('check_out_date', '>=', $newCheckOut);
+                    });
+            })
+            ->first();
+
+        if ($overlappingBooking) {
+            $existingCheckIn = Carbon::parse($overlappingBooking->check_in_date);
+            $existingCheckOut = Carbon::parse($overlappingBooking->check_out_date);
+
+            $message = "Service is unavailable for the requested period. It is booked from {$existingCheckIn->format('Y-m-d')} to {$existingCheckOut->format('Y-m-d')}.";
+
+            // Determine if there's any available portion before the booked period
+            if ($newCheckIn->lt($existingCheckIn)) {
+                $availableUntil = $existingCheckIn->subDay();
+                if ($newCheckIn->lte($availableUntil)) {
+                    $message .= " You can book it from {$newCheckIn->format('Y-m-d')} to {$availableUntil->format('Y-m-d')}.";
+                }
+            }
+            // Determine if there's any available portion after the booked period
+            if ($newCheckOut->gt($existingCheckOut)) {
+                $availableFrom = $existingCheckOut->addDay();
+                if ($newCheckOut->gte($availableFrom)) {
+                    $message .= " You can book it from {$availableFrom->format('Y-m-d')} to {$newCheckOut->format('Y-m-d')}.";
+                }
+            }
+            return $this->returnError('400', $message);
         }
 
         $totalPrice = $service->price * (strtotime($request->check_out_date) - strtotime($request->check_in_date)) / (60 * 60 * 24);
@@ -74,8 +113,10 @@ class BookingServiceController extends Controller
             'check_out_date' => $request->check_out_date,
             'total_price' => $totalPrice,
         ]);
-
-        $service->update(['is_available' => false]);
+        
+        if (Carbon::parse($request->check_in_date)->isToday()) {
+            $service->update(['is_available' => false]);
+        }
         $days = Carbon::parse($request->check_in_date)->diffInDays($request->check_out_date);
         $this->invoiceService->addItemOrCreateInvoice(
             $user->id,
