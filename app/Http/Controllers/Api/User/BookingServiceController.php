@@ -1,6 +1,4 @@
-
 <?php
-
 namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
@@ -13,6 +11,7 @@ use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
+use App\Models\InvoiceItem;
 
 class BookingServiceController extends Controller
 {
@@ -40,10 +39,6 @@ class BookingServiceController extends Controller
         return $this->returnData('bookings', $bookings,"The bookings retrieved successfully");
 
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $user = $request->user();
@@ -78,6 +73,10 @@ class BookingServiceController extends Controller
                         $query->where('check_in_date', '<=', $newCheckIn)
                             ->where('check_out_date', '>=', $newCheckOut);
                     });
+            })
+            // Only consider overlapping bookings that are paid or partially paid
+            ->whereHas('invoice', function ($query) {
+                $query->whereIn('payment_status', ['paid', 'partial']);
             })
             ->first();
 
@@ -114,9 +113,6 @@ class BookingServiceController extends Controller
             'total_price' => $totalPrice,
         ]);
         
-        if (Carbon::parse($request->check_in_date)->isToday()) {
-            $service->update(['is_available' => false]);
-        }
         $days = Carbon::parse($request->check_in_date)->diffInDays($request->check_out_date);
         $this->invoiceService->addItemOrCreateInvoice(
             $user->id,
@@ -126,7 +122,10 @@ class BookingServiceController extends Controller
             $days,
             $service->price
         );
-        return response()->json($booking, 201);
+        return response()->json([
+            'message' => 'Service reserved successfully. Please make a payment (partial or total) to confirm your reservation. The service will remain available until payment is received.',
+            'booking' => $booking
+        ], 201);
     }
 
     /**
@@ -162,8 +161,38 @@ class BookingServiceController extends Controller
         if (!$booking) {
             return $this->returnError('400', 'Booking not found');
         }
+
         $service = $booking->service;
-        $service->update(['is_available' => true]);
+
+        // Find the associated invoice
+        $invoiceItem = \App\Models\InvoiceItem::where('item_type', 'service')
+                                            ->where('item_id', $service->id)
+                                            ->first();
+        
+        if ($invoiceItem) {
+            $invoice = $invoiceItem->invoice;
+            if ($invoice) {
+                // Always make service available upon booking deletion, regardless of payment status.
+                // Further logic might be needed here based on cancellation/refund policies for paid bookings.
+                $service->update(['is_available' => true]);
+
+                // Delete invoice items and invoice if it's no longer needed
+                $invoiceItem->delete();
+
+                // Check if there are other items in the invoice
+                if ($invoice->items()->count() === 0) {
+                    $invoice->delete();
+                } else {
+                    // Recalculate total price if other items exist
+                    $invoice->total_price = $invoice->items()->sum('total_price');
+                    $invoice->save();
+                }
+            }
+        } else {
+            // If no invoice found, assume it's an old booking or an issue, still make service available.
+            $service->update(['is_available' => true]);
+        }
+
         $booking->delete();
         return $this->returnSuccess('Booking deleted successfully',200);
 

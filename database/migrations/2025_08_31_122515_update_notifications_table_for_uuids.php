@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('messages', function (Blueprint $table) {
-            $table->timestamp('read_at')->nullable()->after('message');
+        Schema::table('notifications', function (Blueprint $table) {
+            $table->dropPrimary();
+            $table->uuid('id')->change();
+            $table->primary('id');
         });
     }
 
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('messages', function (Blueprint $table) {
-            $table->dropColumn('read_at');
+        Schema::table('notifications', function (Blueprint $table) {
+            $table->dropPrimary();
+            $table->unsignedBigInteger('id')->change();
+            $table->primary('id');
         });
     }
 };

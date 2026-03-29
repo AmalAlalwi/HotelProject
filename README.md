@@ -1,53 +1,394 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Hotel Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive REST API for hotel room booking management built with Laravel 11. This project implements a complete hotel management system with user authentication, room bookings, service management, invoicing, and real-time notifications.
 
-## About Laravel
+## 📋 Table of Contents
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [Overview](#overview)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [API Documentation](#api-documentation)
+- [Database Schema](#database-schema)
+- [Architecture](#architecture)
+- [Authentication](#authentication)
+- [Testing](#testing)
+- [Known Issues](#known-issues)
+- [Contributing](#contributing)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Overview
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+This project demonstrates a complete hotel booking management system. It includes features for managing hotel rooms, booking services, generating invoices, and handling customer communications through an integrated chat system. The API is secured with JWT authentication and follows REST principles.
 
-## Learning Laravel
+**Project Type:** Laravel 11 REST API  
+**Status:** Functional (Production-ready with improvements needed)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Features
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **User Management**
+  - JWT-based authentication with email/password
+  - Role-based access control (Admin/User/Employee)
+  - User profile management
+  - Custom user interfaces
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Room Management**
+  - Browse available rooms
+  - View room details and pricing
+  - Real-time room availability tracking
+  - Room categories and amenities
 
-## Laravel Sponsors
+- **Booking System**
+  - Create and manage bookings for rooms
+  - Browse and add multiple services to bookings (room service, cleaning, spa, etc.)
+  - Flexible check-in/check-out dates
+  - Booking status tracking
+  - Remove or modify services from active bookings
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- **Service Management**
+  - Browse available services and pricing
+  - Add services to existing bookings
+  - View service details and descriptions
+  - Manage service pricing and availability (admin only)
 
-### Premium Partners
+- **Invoicing System**
+  - Automated invoice generation
+  - Invoice items for rooms and services
+  - Payment tracking
+  - Invoice download capabilities
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+- **Communication**
+  - Real-time chat between guests and support
+  - Message notifications
+  - Conversation history
+
+- **Notifications**
+  - Invoice payment notifications
+  - Booking confirmations
+  - Chat message alerts
+
+## Technology Stack
+
+- **Backend:** Laravel 11
+- **Database:** MySQL/MariaDB
+- **Authentication:** JWT (tymon/jwt-auth)
+- **File Storage:** Local filesystem with image processing
+- **Broadcasting:** Laravel Broadcasting (WebSockets)
+- **Mail:** Mailable classes with DOMPDF for invoices
+- **Testing:** PHPUnit
+
+### Dependencies
+
+- `tymon/jwt-auth` - JWT authentication
+- `intervention/image` - Image processing
+- `barryvdh/laravel-dompdf` - PDF generation
+- `laravel/sanctum` - API token authentication
+- `laravel/tinker` - REPL for Laravel
+
+## Installation
+
+### Prerequisites
+
+- PHP 8.2+
+- Composer
+- MySQL 8.0+ or MariaDB
+- Node.js 18+ (for Vite compilation)
+
+### Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd HotelProject
+   ```
+
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
+
+3. **Install frontend dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Copy environment file**
+   ```bash
+   cp .env.example .env
+   ```
+
+5. **Generate application key**
+   ```bash
+   php artisan key:generate
+   ```
+
+6. **Generate JWT secret**
+   ```bash
+   php artisan jwt:secret
+   ```
+
+7. **Run migrations**
+   ```bash
+   php artisan migrate
+   ```
+
+8. **Seed the database (optional)**
+   ```bash
+   php artisan db:seed
+   ```
+
+9. **Build assets**
+   ```bash
+   npm run build
+   ```
+
+10. **Start the development server**
+    ```bash
+    php artisan serve
+    ```
+
+The API will be available at `http://localhost:8000`
+
+## Configuration
+
+### Environment Variables
+
+Key environment variables in `.env`:
+
+```env
+APP_NAME=HotelManagement
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=hotel_management
+DB_USERNAME=root
+DB_PASSWORD=
+
+JWT_SECRET=<generated by php artisan jwt:secret>
+JWT_ALGORITHM=HS256
+JWT_TTL=60
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=587
+```
+
+### Create Default Admin
+
+```bash
+php artisan tinker
+>>> User::create(['name' => 'Admin', 'email' => 'admin@example.com', 'password' => bcrypt('password'), 'role' => -1])
+```
+
+## API Documentation
+
+Full API documentation is available in [GraduationProject.postman_collection.json](GraduationProject.postman_collection.json)
+
+### Authentication Endpoints (Public)
+
+- `POST /api/register` - Register new user
+- `POST /api/login` - Login and receive JWT token
+- `POST /api/logout` - Logout user (requires auth)
+- `GET /api/me` - Get current user profile (requires auth)
+- `GET /api/users` - List all users (requires auth)
+
+### Room Management
+
+**For Browsing Available Rooms (User)**
+- `GET /api/getrooms` - Get list of all available rooms with details
+
+**For Managing Rooms (Admin Only)**
+- `GET /api/rooms` - List all rooms (admin view)
+- `GET /api/rooms/{room}` - Get specific room details (admin view)
+- `POST /api/rooms` - Create new room
+- `PUT /api/rooms/{room}` - Update room information
+- `DELETE /api/rooms/{room}` - Delete a room
+
+### Service Management
+
+**For Browsing Services (User)**
+- `GET /api/getservices` - Get list of all available services
+
+**For Managing Services (Admin Only)**
+- `GET /api/services` - List all services
+- `GET /api/services/{service}` - Get service details
+- `POST /api/services` - Create new service
+- `PUT /api/services/{service}` - Update service
+- `DELETE /api/services/{service}` - Delete service
+
+### Booking Management (User)
+
+- `GET /api/booking` - List all user bookings
+- `POST /api/booking` - Create new booking
+- `GET /api/booking/{id}` - Get booking details
+- `PUT /api/booking/{id}` - Update booking
+- `DELETE /api/booking/{id}` - Cancel booking
+
+### Booking Services (User can add services to bookings)
+
+- `GET /api/bookingService` - List all booking services
+- `POST /api/bookingService` - Add service to booking
+- `GET /api/bookingService/{id}` - Get booking service details
+- `PUT /api/bookingService/{id}` - Update booking service
+- `DELETE /api/bookingService/{id}` - Remove service from booking
+
+### Invoice Management (User)
+
+- `GET /api/invoices/paid` - Get all paid invoices
+- `GET /api/invoices/unpaid` - Get all unpaid invoices
+- `GET /api/invoices/partial` - Get all partially paid invoices
+- `GET /api/invoices/{id}/show` - Get invoice details
+- `GET /api/invoices/{id}/pdf` - Download invoice as PDF
+- `POST /api/invoices/{id}/simulate` - Submit payment request (admin review)
+
+### Messages & Chat (User)
+
+- `POST /api/sendMessage` - Send message to support/other user
+- `GET /api/conversation/{receiverId}` - Get conversation history with specific user
+- `GET /api/conversations/{employeeId}` - Get all conversations with employee
+
+### Notifications (User)
+
+- `GET /api/notifications/unread` - Get unread notifications
+- `GET /api/notifications/read` - Get read notifications
+- `POST /api/notifications/mark-all-read` - Mark all notifications as read
+
+### Admin Statistics & Management
+
+**Statistics & Reporting**
+- `GET /api/admin/statistics` - Get overall hotel statistics
+- `GET /api/admin/invoices` - Get all invoices with items
+- `GET /api/admin/invoices/paid` - Get paid invoices
+- `GET /api/admin/invoices/unpaid` - Get unpaid invoices
+- `GET /api/admin/invoices/partial` - Get partially paid invoices
+- `GET /api/admin/statistics/revenue` - Get revenue statistics
+- `GET /api/admin/monthly-bookings` - Get monthly booking data
+- `GET /api/admin/monthly-revenues` - Get monthly revenue data
+
+**Admin Notifications**
+- `GET /api/admin/notifications` - Get all admin notifications
+- `GET /api/admin/notifications/unread` - Get unread admin notifications
+- `POST /api/admin/notifications/{id}/mark-as-read` - Mark notification as read
+- `POST /api/admin/notifications/mark-all-read` - Mark all notifications as read
+
+**Payment Confirmation**
+- `POST /api/notifications/{notificationId}/invoices/{id}/confirm-payment` - Confirm payment from user request
+
+## Database Schema
+
+### Core Tables
+
+- **users** - User accounts with roles
+- **rooms** - Hotel rooms available for booking
+- **bookings** - Room reservations
+- **booking_services** - Services associated with bookings
+- **services** - Available services (room service, cleaning, etc.)
+- **invoices** - Generated invoices
+- **invoice_items** - Line items in invoices (rooms/services)
+- **messages** - Direct messages between users
+- **notifications** - User notifications queue
+
+### Key Relationships
+
+```
+User
+├── hasMany Bookings
+├── hasMany Invoices
+├── hasMany Messages
+└── hasMany Notifications
+
+Booking
+├── belongsTo User
+├── belongsTo Room
+├── hasMany BookingServices
+├── hasMany InvoiceItems
+└── hasOne Invoice
+
+Service
+├── hasMany BookingServices
+└── hasMany InvoiceItems
+
+Invoice
+├── belongsTo User
+├── hasMany InvoiceItems
+└── hasMany Notifications
+```
+
+## Architecture
+
+### Design Patterns
+
+- **Repository Pattern** - Data access abstraction layer in `app/Repository/`
+- **Service Layer** - Business logic in `app/Services/`
+- **Traits** - Reusable functionality (`GeneralTrait`, `ImageTrait`)
+- **Notifications** - Laravel notification system for async alerts
+
+### Directory Structure
+
+```
+app/
+├── Console/          # Artisan commands
+├── Exceptions/       # Exception handlers
+├── Http/
+│   ├── Controllers/  # API controllers
+│   ├── Middleware/   # Request/response middleware
+│   └── Requests/     # Form request validation
+├── Interfaces/       # Repository contracts
+├── Mail/             # Mailable classes
+├── Models/           # Eloquent models
+├── Notifications/    # Notification classes
+├── Providers/        # Service providers
+├── Repository/       # Data access layer
+├── Services/         # Business logic
+└── Traits/           # Reusable code blocks
+
+database/
+├── factories/        # Model factories for testing
+├── migrations/       # Database schema
+└── seeders/          # Database seeds
+
+routes/
+├── api.php           # API routes
+├── web.php           # Web routes
+└── channels.php      # Broadcasting channels
+```
+
+## Authentication
+
+The API uses **JWT (JSON Web Tokens)** for authentication provided by `tymon/jwt-auth`.
+
+### Login Flow
+
+```bash
+POST /api/auth/login
+{
+  "email": "user@example.com",
+  "password": "password"
+}
+
+# Response
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "token_type": "bearer",
+  "expires_in": 3600
+}
+```
+
+### Using the Token
+
+Include the token in the Authorization header:
+
+```
+Authorization: Bearer <token>
+```
+
+## License
+
+This project is created as a graduation project and is provided as-is for educational purposes.
 
 ## Contributing
 

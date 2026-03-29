@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\Service;
 use App\Traits\GeneralTrait;
+use App\Traits\ImageTrait;
 use Illuminate\Http\Request;
 
 class RoomController extends Controller
 {
-    use GeneralTrait;
+    use GeneralTrait,ImageTrait;
     public function index(Request $request)
     {
         $request->validate([
@@ -44,7 +45,7 @@ class RoomController extends Controller
 
 
         $rooms->getCollection()->transform(function ($room) {
-            $room->img = asset('storage/'.$room->img);
+            $room->img = $this->getImageUrl($room->img, 'rooms');
             return $room;
         });
 
@@ -83,7 +84,7 @@ class RoomController extends Controller
         $services = $query->paginate($perPage);
 
         $services->getCollection()->transform(function ($service) {
-            $service->img =asset('storage/'.$service->img);
+            $service->img = $this->getImageUrl($service->img, 'services');
             return $service;
         });
         if ($services->isNotEmpty()) {

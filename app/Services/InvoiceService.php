@@ -20,22 +20,15 @@ class InvoiceService
     {
         $total = $quantity * $unitPrice;
 
-        // نحصل على أول فاتورة غير مدفوعة بالكامل
-        $invoice = \App\Models\Invoice::where('user_id', $userId)
-            ->whereIn('payment_status', ['unpaid', 'partial'])
-            ->first();
+        // Always create a new invoice for each booking
+        $invoice = \App\Models\Invoice::create([
+            'user_id' => $userId,
+            'total_price' => 0,
+            'payment_status' => 'unpaid',
+            'issued_at' => now(),
+        ]);
 
-        // إذا لم توجد فاتورة غير مدفوعة بالكامل، ننشئ واحدة جديدة
-        if (!$invoice) {
-            $invoice = \App\Models\Invoice::create([
-                'user_id' => $userId,
-                'total_price' => 0,
-                'payment_status' => 'unpaid',
-                'issued_at' => now(),
-            ]);
-        }
-
-        // نضيف البند للفاتورة
+        // Add the item to the new invoice
         $invoice->items()->create([
             'item_type' => $itemType,
             'item_id' => $itemId,
@@ -48,7 +41,8 @@ class InvoiceService
         $invoice->update([
             'total_price' => $invoice->total_price + $total,
         ]);
-        $this->sendInvoiceEmail($invoice->id);
+        // Removed: Email should only be sent upon full payment
+        // $this->sendInvoiceEmail($invoice->id);
 
         return $invoice;
     }

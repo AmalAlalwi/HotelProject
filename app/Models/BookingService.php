@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\InvoiceItem;
 
 class BookingService extends Model
 {
@@ -19,5 +20,12 @@ class BookingService extends Model
     public function service()
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function invoice()
+    {
+        return $this->hasOneThrough(Invoice::class, InvoiceItem::class,
+            'item_id', 'id', 'id', 'invoice_id')
+            ->where('item_type', 'service');
     }
 }

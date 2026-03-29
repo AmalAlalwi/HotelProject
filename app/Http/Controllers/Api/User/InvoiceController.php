@@ -47,4 +47,7 @@ class InvoiceController extends Controller
         return $this->invoice->showInvoice($id);
     }
 
+    public function confirmPayment($notificationId, $id){
+        return $this->invoice->confirmPayment($notificationId, $id);
+    }
 }

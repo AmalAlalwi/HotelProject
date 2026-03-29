@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\User\MessageController;
+use App\Http\Controllers\Api\Admin\AdminNotificationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -52,6 +53,15 @@ Route::middleware(['auth_jwt','admin'])->group(function () {
     Route::get('/admin/statistics/revenue',[StatisticsController::class,'revenueStatus']);
     Route::get('/admin/monthly-bookings',[StatisticsController::class,'getMonthlyBookings']);
     Route::get('/admin/monthly-revenues',[StatisticsController::class,'getMonthlyRevenues']);
+
+    //---------------------------------Admin Notifications-------------------------------------------
+    Route::get('/admin/notifications', [AdminNotificationController::class, 'index']);
+    Route::get('/admin/notifications/unread', [AdminNotificationController::class, 'unreadNotifications']);
+    Route::post('/admin/notifications/{id}/mark-as-read', [AdminNotificationController::class, 'markAsRead']);
+    Route::post('/admin/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead']);
+
+    //---------------------------------Confirm Payment------------------------------------------------
+    Route::post('notifications/{notificationId}/invoices/{id}/confirm-payment', [InvoiceController::class, 'confirmPayment']);
 });
 
 Route::middleware(['auth_jwt'])->group(function () {
@@ -70,6 +80,7 @@ Route::middleware(['auth_jwt'])->group(function () {
     Route::get('/invoices/{id}/show', [InvoiceController::class, 'showInvoice']);
     Route::get('/invoices/{id}/pdf', [InvoiceController::class, 'downloadPDF']);
     Route::post('/invoices/{id}/simulate', [InvoiceController::class, 'simulatePayment']);
+
 
     //---------------------------------Notifications-------------------------------------------
     Route::get('/notifications/unread', [NotificationController::class, 'unreadNotifications']);

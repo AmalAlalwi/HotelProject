@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\InvoiceItem;
 
 class BookingController extends Controller
 {
@@ -78,6 +79,10 @@ class BookingController extends Controller
                             ->where('check_out_date', '>=', $newCheckOut);
                     });
             })
+            // Only consider overlapping bookings that are paid or partially paid
+            ->whereHas('invoice', function ($query) {
+                $query->whereIn('payment_status', ['paid', 'partial']);
+            })
             ->first();
 
         if ($overlappingBooking) {
@@ -105,6 +110,35 @@ class BookingController extends Controller
 
         $totalPrice = $room->price * (strtotime($request->check_out_date) - strtotime($request->check_in_date)) / (60 * 60 * 24);
 
+        // Delete any unpaid overlapping bookings before creating the new one
+        $unpaidOverlappingBookings = Booking::where('room_id', $request->room_id)
+            ->where(function ($query) use ($newCheckIn, $newCheckOut) {
+                $query->whereBetween('check_in_date', [$newCheckIn, $newCheckOut->subDay()])
+                    ->orWhereBetween('check_out_date', [$newCheckIn->addDay(), $newCheckOut])
+                    ->orWhere(function ($query) use ($newCheckIn, $newCheckOut) {
+                        $query->where('check_in_date', '<=', $newCheckIn)
+                            ->where('check_out_date', '>=', $newCheckOut);
+                    });
+            })
+            ->whereDoesntHave('invoice', function ($query) {
+                $query->whereIn('payment_status', ['paid', 'partial']);
+            })
+            ->get();
+
+        foreach ($unpaidOverlappingBookings as $oldBooking) {
+            $oldInvoiceItem = \App\Models\InvoiceItem::where('item_type', 'room')
+                                                    ->where('item_id', $oldBooking->room_id)
+                                                    ->first();
+            if ($oldInvoiceItem) {
+                $oldInvoice = $oldInvoiceItem->invoice;
+                $oldInvoiceItem->delete();
+                if ($oldInvoice->items()->count() === 0) {
+                    $oldInvoice->delete();
+                }
+            }
+            $oldBooking->delete();
+        }
+
         $booking = Booking::create([
             'user_id' => $user->id,
             'room_id' => $request->room_id,
@@ -113,9 +147,6 @@ class BookingController extends Controller
             'total_price' => $totalPrice,
         ]);
 
-        if (Carbon::parse($request->check_in_date)->isToday()) {
-            $room->update(['is_available' => false]);
-        }
         $days = Carbon::parse($request->check_in_date)->diffInDays($request->check_out_date);
         $this->invoiceService->addItemOrCreateInvoice(
             $user->id,
@@ -126,7 +157,10 @@ class BookingController extends Controller
             $room->price
         );
         DB::commit();
-        return response()->json($booking, 201);
+        return response()->json([
+            'message' => 'Room reserved successfully. Please make a payment (partial or total) to confirm your reservation. The room will remain available until payment is received.',
+            'booking' => $booking
+        ], 201);
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -167,8 +201,38 @@ class BookingController extends Controller
         if (!$booking) {
             return $this->returnError('400', 'Booking not found');
         }
+
         $room = $booking->room;
-        $room->update(['is_available' => true]);
+
+        // Find the associated invoice
+        $invoiceItem = \App\Models\InvoiceItem::where('item_type', 'room')
+                                            ->where('item_id', $room->id)
+                                            ->first();
+        
+        if ($invoiceItem) {
+            $invoice = $invoiceItem->invoice;
+            if ($invoice) {
+                // Always make room available upon booking deletion, regardless of payment status.
+                // Further logic might be needed here based on cancellation/refund policies for paid bookings.
+                $room->update(['is_available' => true]);
+
+                // Delete invoice items and invoice if it's no longer needed
+                $invoiceItem->delete();
+
+                // Check if there are other items in the invoice
+                if ($invoice->items()->count() === 0) {
+                    $invoice->delete();
+                } else {
+                    // Recalculate total price if other items exist
+                    $invoice->total_price = $invoice->items()->sum('total_price');
+                    $invoice->save();
+                }
+            }
+        } else {
+            // If no invoice found, assume it's an old booking or an issue, still make room available.
+            $room->update(['is_available' => true]);
+        }
+
         $booking->delete();
         return $this->returnSuccess('Booking deleted successfully',200);
 

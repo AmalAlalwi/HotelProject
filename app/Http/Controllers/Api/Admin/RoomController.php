@@ -18,8 +18,7 @@ class RoomController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'minPrice' => 'nullable|numeric',
-            'maxPrice' => 'nullable|numeric',
+            'priuce'=>'nullable|numeric',
             'perPage' => 'nullable|integer|min:1|max:50',
             'filter' => 'nullable|numeric|min:1|max:2',
         ]);
@@ -27,19 +26,17 @@ class RoomController extends Controller
     }
     public function store(Request $request)
     {
-
-        $valid = Validator::make($request->all(), [
-            'room_number' => 'required|unique:rooms,room_number',
+        $validated = $request->validate([
+            'room_number' => 'required|string|unique:rooms,room_number',
             'description' => 'required|string',
-            'is_available' => 'required|boolean|in:0,1',
-            'type' => 'required|string',
-            'img' => 'nullable|mimes:jpeg,png,jpg,svg|max:2048',
-            'price' => 'required|numeric'
+            'type' => 'required|in:single,double,suite',
+            'price' => 'required|numeric|min:0',
+            'is_available' => 'sometimes|boolean',
+            'img' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-        if ($valid->fails()) {
-            return response(['errors' => $valid->errors()], 422);
-        }
-        return $this->RoomRepository->store($request);
+
+        $image = $request->file('img');
+        return $this->RoomRepository->store($validated, $image);
     }
     /**
      * Display the specified resource.
@@ -53,20 +50,9 @@ class RoomController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $valid = Validator::make($request->all(), [
-            'room_number' => 'required',
-            'description' => 'required|string',
-            'is_available' => 'required|boolean',
-            'type' => 'required|string',
-            'img' => 'mimes:jpeg,png,jpg,svg|max:2048',
-            'price'=>'required|numeric'
-        ]);
-        if ($valid->fails()) {
-            return response(['errors'=>$valid->errors()],422);
-        }
-       return $this->RoomRepository->update($request,$id);
+        return $this->RoomRepository->update($request, $id);
     }
 
     public function destroy(string $id)

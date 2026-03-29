@@ -212,13 +212,5 @@ public function returnData($key,$value,$msg="")
             return "";
     }
 
-    Public function SaveImage($request, $folder)
-    {
-        if ($image = $request->file('img')) {
-            $imageName = uniqid() . '_' . time() . '.' . $image->getClientOriginalExtension();
-            $path = $image->storeAs('images/' . $folder, $imageName, 'public');
-            return $path;
-        }
-        return null;
-    }
+   
 }
